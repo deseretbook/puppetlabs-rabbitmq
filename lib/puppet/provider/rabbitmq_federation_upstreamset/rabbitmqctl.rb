@@ -17,7 +17,7 @@ Puppet::Type.type(:rabbitmq_federation_upstreamset).provide(:rabbitmqctl) do
           names = JSON.parse($2).collect { |data| data['upstream'] }
           new(:name => $1, :ensure => :present, :vhost => vhost, :upstreams => names)
         else
-          raise Puppet::Error, "Cannot parse invalid user line: #{line}"
+          raise Puppet::Error, "Cannot parse invalid federation-upstream-set line: #{line}"
         end
       end
     end.flatten
@@ -37,7 +37,7 @@ Puppet::Type.type(:rabbitmq_federation_upstreamset).provide(:rabbitmqctl) do
 
   def destroy
     rabbitmqctl('clear_parameter', '-p', resource[:vhost], 'federation-upstream-set', resource[:name])
-    @property_hash[:ensure] = :absent
+    @property_hash = {}  # used in conjunction with flush to avoid calling non-indempotent destroy twice
   end
 
   def exists?
@@ -45,7 +45,14 @@ Puppet::Type.type(:rabbitmq_federation_upstreamset).provide(:rabbitmqctl) do
   end
 
   def flush
-    self.create
+    # flush is used purely in an update capacity
+    # @property_hash is tested to avoid calling non-indempotent destroy twice
+    if @property_hash == {}
+      Puppet.debug 'hash empty - instance does not exist on system'
+    elsif self.exists?
+      self.create
+    else
+      self.destroy
+    end
   end
 end
-

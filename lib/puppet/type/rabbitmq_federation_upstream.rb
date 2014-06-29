@@ -21,8 +21,13 @@ Puppet::Type.newtype(:rabbitmq_federation_upstream) do
     [self[:vhost]]
   end
 
-  newproperty(:uri) do
+  newproperty(:uris, :array_matching => :all) do
     desc 'The uri for the server to connect to'
+    validate do |value|
+      unless value =~ /^amqps?:\/\/\S+$/
+        raise ArgumentError, 'Invalid uri. Must use amqp or amqps protocol and cannot have spaces.'
+      end
+    end
   end
 
   newproperty(:expires) do
@@ -68,4 +73,3 @@ Puppet::Type.newtype(:rabbitmq_federation_upstream) do
     defaultto :false
   end
 end
-

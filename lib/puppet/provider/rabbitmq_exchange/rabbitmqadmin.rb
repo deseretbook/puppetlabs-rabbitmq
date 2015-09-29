@@ -40,7 +40,7 @@ Puppet::Type.type(:rabbitmq_exchange).provide(:rabbitmqadmin, :parent => Puppet:
     }.split(/\n/).each do |exchange|
       exchanges.push(exchange)
     end
-    exchanges
+    exchanges.reject { |e| e =~ /^federation:\s.*x-federation-upstream/ }
   end
 
   def self.instances

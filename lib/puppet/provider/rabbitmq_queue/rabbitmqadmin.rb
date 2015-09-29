@@ -32,7 +32,8 @@ Puppet::Type.type(:rabbitmq_queue).provide(:rabbitmqadmin) do
   end
 
   def self.all_queues(vhost)
-    rabbitmqctl('list_queues', '-q', '-p', vhost, 'name', 'durable', 'auto_delete', 'arguments').split(/\n/)
+    # Remove federation queues to avoid breaking the prefetch
+    rabbitmqctl('list_queues', '-q', '-p', vhost, 'name', 'durable', 'auto_delete', 'arguments').split(/\n/).reject { |q| q =~ /^federation:\s.*->\s/ }
   end
 
   def self.instances

@@ -4,21 +4,23 @@ require 'json'
 Puppet::Type.newtype(:rabbitmq_federation_upstream) do
   desc 'Native type for managing upstreams for rabbitmq federation'
 
-  ensurable
+  ensurable do
+    defaultto(:present)
+    newvalue(:present) do
+      provider.create
+    end
+    newvalue(:absent) do
+      provider.destroy
+    end
+  end
 
   newparam(:name, :namevar => true) do
     desc 'Name of federation upstream'
-    newvalues(/^[\w\w-]+$/)
-  end
-
-  newparam(:vhost) do
-    desc 'Vhost for federation upstream'
-    newvalues(/^[\w\/-]+$/)
-    defaultto '/'
+    newvalues(/^[\w\w-]+@[\w\/-]+$/)
   end
 
   autorequire(:rabbitmq_vhost) do
-    [self[:vhost]]
+    [self[:name].split('@')[1]]
   end
 
   newproperty(:uris, :array_matching => :all) do
